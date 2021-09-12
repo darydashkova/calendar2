@@ -3,19 +3,12 @@
     <div class="kalendar__container">
       <div class="kalendar__container-date">
         <div class="kalendar__mounth">
-          <!-- <select v-model="selectedMonth" @change="getDates">
-            <option
-              v-for="(mounth, index) in date.MonthName"
-              :key="index"
-              :value="index"
-            >
-              {{ mounth }}
-            </option>
-          </select> -->
+          <div class="kalendar__mounth-container">
           <button @click="changeMonth(-1)">&lt;</button
-          >{{ date.MonthName[selectedMonth]
-          }}<button @click="changeMonth(+1)">&gt;</button>
-          <div class="kalendar__year">{{ selectedYear }}</div>
+          > <div class="kalendar__mounth-name">{{ date.MonthName[selectedMonth]
+          }}</div><button @click="changeMonth(+1)">&gt;</button>
+          </div>
+          <div class="kalendar__year">{{ showYear }}</div>
         </div>
       </div>
       <div class="kalendar__table">
@@ -35,20 +28,11 @@
             class="kalendar__table-week"
           >
             <div v-for="day in d" :key="day.day" class="kalendar__table-day">
-              {{ day.day }}
-              <ul>
-                <li v-for="(item, ind) in day.events" :key="ind">{{ item }}</li>
-              </ul>
+              <day
+              :day="day">
+              </day>
             </div>
           </div>
-        </div>
-        <div class="kalendar__table-column kalendar_max-width-day">
-          <day
-            v-for="item in dayArray"
-            :date="item.date"
-            :day="item.day"
-            :key="item.date"
-          ></day>
         </div>
       </div>
     </div>
@@ -57,7 +41,7 @@
 
 <script>
 import day from "./day.vue";
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 
 export default {
   components: { day },
@@ -103,20 +87,41 @@ export default {
       ],
       daynum: [],
     });
-    const events = {
-      "8.9.2021": ["10.00 - линейка"],
-      "12.9.2021": ["10.00 - линейка", "12.00-физкультура"],
-      "21.9.2021": ["10.00 - линейка", "12.00-физкультура"],
-      "30.9.2021": ["10.00 - линейка", "12.00-физкультура"],
-      "1.10.2021": ["10.00 - линейка", "12.00-физкультура"],
-      "5.10.2021": ["10.00 - линейка", "12.00-физкультура"],
-      "5.11.2021": ["10.00 - линейка", "12.00-физкультура"],
-      "9.11.2021": ["10.00 - линейка", "12.00-физкультура"],
-    };
-    // for (let i = 0; i < 7; i++) {
-    //   dayWeek.value.push('');
-    // }
+    const eventsItem = [
+      { name: 'Линейка',
+      id : 1,
+      type : 'highest',
+      date: '2021-09-20T15:52:01+03:00'
+      },
+      { name: 'Линейка',
+      id : 2,
+      type : 'medium',
+      date: '2021-09-20T10:52:01+03:00'
+      },
+      { name: 'Линейка',
+      id : 3,
+      type : 'low',
+      date: '2021-09-20T13:52:01+03:00'
+      },
+       { name: 'Линейка',
+      id : 4,
+      type : 'medium',
+      date:'2021-09-22T09:52:01+03:00'
+      },
+       { name: 'Линейка',
+      id : 5,
+      type : 'medium',
+      date:'2021-09-01T09:52:01+03:00'
+      },
+       { name: 'Линейка',
+      id : 6,
+      type : 'low',
+      date:'2021-10-15T04:52:01+03:00'
+      },
+    ]
+
     const today = new Date();
+
     const selectedMonth = ref(today.getMonth());
     const selectedDay = ref(today.getDate());
     const selectedYear = ref(today.getFullYear());
@@ -133,12 +138,35 @@ export default {
       }
       getDates();
     };
+    const showYear = computed(() => {
+   
+      if(today.getFullYear()==selectedYear.value){
+        return ''
+      }
+      return selectedYear.value
+    })
     const eventsCalculate = (fullDdate) => {
       let event = [];
-      if (events[fullDdate]) {
-        event = events[fullDdate];
+      for (let i = 0 ; i<eventsItem.length-1; i++){
+        const fulldateStart = eventsItem[i].date.startsWith(fullDdate);
+        if (fulldateStart) {
+        const time = new Date(eventsItem[i].date);
+        const timeCalculate = time.getHours() + ':'+ time.getMinutes();
+        event.push({name:eventsItem[i].name, time:timeCalculate, date : eventsItem[i].date, priority : eventsItem[i].type});
       }
+      }  
+      event = event.sort(function(a,b){ 
+          return  new Date(a.date) - new Date(b.date); 
+          });
       return event;
+
+    };
+
+      
+
+    const eventAdd = (year, month, day) => {
+      const fullDate = year + "-"+ (month<10? '0'+ month: month )+"-" + (day<10? '0'+ day: day );
+      return fullDate;
     };
     const getDates = () => {
       date.daynum = [];
@@ -153,62 +181,57 @@ export default {
         prevMonthData.month = 11;
         prevMonthData.year = selectedYear.value - 1;
       }
-
-      let prevMonth = new Date(prevMonthData.year, prevMonthData.month);
-      const prevMonthDays = [];
-      while (prevMonth.getMonth() == prevMonthData.month) {
-        prevMonthDays.push(prevMonth.getDate());
-        prevMonth = new Date(prevMonth.getTime() + 1000 * 60 * 60 * 24);
-      }
       let firstdayindex = null;
       while (d.getMonth() == selectedMonth.value) {
         if (firstdayindex === null) {
           firstdayindex = d.getDay();
         }
-
-        const fullDdate =
-          String(d.getDate()) +
-          "." +
-          String(d.getMonth() + 1) +
-          "." +
-          String(d.getFullYear());
-          
-
-        dayWeek.push({ day: d.getDate(), events: eventsCalculate(fullDdate) });
+        dayWeek.push({
+          day: d.getDate(),
+          events: eventsCalculate(
+            eventAdd(d.getFullYear(),d.getMonth() + 1,  d.getDate())
+          ),
+        });
         d = new Date(d.getTime() + 1000 * 60 * 60 * 24);
       }
+      const firstdayTimestamp = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      ).getTime();
+
       for (let i = 1; i < firstdayindex; i++) {
-          const fullDdate =
-          String(prevMonthDays[prevMonthDays.length - i]) +
-          "." +
-          String(prevMonthData.month+1) +
-          "." +
-          String(prevMonthData.year);
-        dayWeek.unshift({day: prevMonthDays[prevMonthDays.length - i], events: eventsCalculate(fullDdate)});
+        const d = new Date(firstdayTimestamp - 1000 * 60 * 60 * 24 * i);
+        dayWeek.unshift({
+          day: d.getDate(),
+          events: eventsCalculate(
+            eventAdd(d.getFullYear(),d.getMonth() + 1,  d.getDate())
+          ),
+        });
       }
       const groups = [];
       for (let i = 0; i < dayWeek.length; i += 7) {
         groups.push(dayWeek.slice(i, i + 7));
       }
       const lastweek = groups[groups.length - 1];
-      const nextMonth = {month:selectedMonth.value+1, year: selectedYear.value}
-       if (selectedMonth.value === 11) {
-        nextMonth.month = 0;
-        nextMonth.year = selectedYear.value + 1;
-      }
+      const lastdayTimestamp = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        lastweek[lastweek.length - 1].day
+      ).getTime();
+      const lastweekLenght = lastweek.length;
       if (lastweek.length < 7) {
-        for (let i = lastweek.length, j = 1; i < 7; i++, j++) {
-           const fullDdate =
-          String(j) +
-          "." +
-          String(nextMonth.month+1) +
-          "." +
-          String(nextMonth.year);
-          groups[groups.length - 1].push({day:j, events: eventsCalculate(fullDdate)});
+        for (let i = 1; i <= 7 - lastweekLenght; i++) {
+          const d = new Date(lastdayTimestamp + 1000 * 60 * 60 * 24 * i);
+          groups[groups.length - 1].push({
+            day: d.getDate(),
+            events: eventsCalculate(
+               eventAdd(d.getFullYear(),d.getMonth() + 1,  d.getDate())
+            ),
+          });
         }
       }
       date.daynum = groups;
-      console.log(dayWeek);
     };
 
     getDates();
@@ -221,6 +244,9 @@ export default {
       getDates,
       changeMonth,
       eventsCalculate,
+      eventAdd,
+      eventsItem,
+      showYear
     };
   },
 };
@@ -243,15 +269,20 @@ li {
 a {
   color: #42b983;
 }
+
 .kalendar_max-width-day {
   flex-wrap: wrap;
 }
+.kalendar__container-date{
+  height: 8%;
+}
 .kalendar {
-  width: 100%;
+  width: 98%;
+  height: 98%;
 }
 .kalendar__container {
   widows: 100%;
-  padding: 20px;
+  height: 100%;
   border-radius: 10px;
   border: 1px solid grey;
 }
@@ -262,10 +293,16 @@ a {
 }
 .kalendar__mounth {
   display: flex;
+  padding: 20px 0px;
+  font-size: 23px;
+  font-weight: bold;
+margin-left: 20px;
 }
 .kalendar__table {
   display: flex;
   flex-direction: column;
+  height:92%;
+
 }
 .kalendar__table-column {
   display: flex;
@@ -274,17 +311,42 @@ a {
 .kalendar__table-name-date {
   width: 14%;
 }
+
 .kalendar__table-week {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  padding: 20px 0px;
+  padding: 5px 0px;
+  height: inherit;
 }
 .kalendar__table-day {
-  width: 14%;
+  width: 100%;
   height: 100%;
+  margin: 5px;
+  border: 1px solid lightblue;
 }
 .kalendar__table-column-days {
   flex-direction: column;
+height: 100%;
+}
+.medium{
+  background-color:lightgoldenrodyellow;
+}
+.low{
+  background-color:lightgreen;
+}
+.highest{
+  background-color:lightsalmon;
+}
+.kalendar__mounth-name{
+  padding:  0px 30px;
+}
+.kalendar__year{
+  padding-left: 20px;
+}
+.kalendar__mounth-container{
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
 }
 </style>

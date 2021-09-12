@@ -1,8 +1,10 @@
 <template>
-  <div class="days-item">
-    Date : {{ date }} <br />
-    Day: {{ day }}
-  </div>
+<div >
+              {{ day.day }}
+              <ul class="kalendar__table-day-list">
+                <li v-for="(item, ind) in day.events" :key="ind" :class="item.priority">{{ item.name }} {{item.time}}</li>
+              </ul>
+            </div>
 </template>
 
 <script>
@@ -10,12 +12,7 @@
 export default {
   name: "day",
   props: {
-    date: {
-      type: Number,
-    },
-    day: {
-      type: Number,
-    },
+    day: {}
   },
   setup() {
     return {};
@@ -49,5 +46,13 @@ a {
   border: 1px solid lightblue;
   border-radius: 10px;
   width: 14%;
+}
+.kalendar__table-day {
+  width: 100%;
+  height: 100%;
+}
+.kalendar__table-day-list{
+  display: flex;
+  flex-direction: column;
 }
 </style>
